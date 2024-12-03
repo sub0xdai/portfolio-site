@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TriMate Med - Medical Knowledge Base</title>
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .content-container {
+            height: calc(100vh - 80px);
+        }
+        .tags-container {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .notes-container {
+            height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-800 text-white p-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold">TriMate Med</h1>
+            <p class="text-blue-200">Medical Knowledge Base</p>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 content-container">
+            <!-- Tags Section -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Knowledge Tags</h2>
+                <div class="tags-container" 
+                     hx-get="/api/tags"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Section -->
+            <div class="md:col-span-3">
+                <div class="bg-white p-6 rounded-lg shadow-lg mb-4">
+                    <!-- Search Bar -->
+                    <form class="mb-6" hx-post="/api/query" hx-target="#search-results">
+                        <div class="flex gap-2">
+                            <input type="text" 
+                                   name="text" 
+                                   placeholder="Search medical knowledge..." 
+                                   class="flex-1 p-2 border rounded focus:outline-none focus:border-blue-500">
+                            <button type="submit" 
+                                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                Search
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Results Area -->
+                    <div id="search-results" class="notes-container">
+                        <div class="text-center text-gray-500">
+                            Enter a query above to search the medical knowledge base
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.body.addEventListener('click', function(e) {
+            if (e.target.matches('[data-tag]')) {
+                const tag = e.target.getAttribute('data-tag');
+                htmx.ajax('GET', `/api/notes/tag/${encodeURIComponent(tag)}`, '#search-results');
+            }
+        });
+    </script>
+</body>
+</html>

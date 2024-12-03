@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trimate Medical Chatbot</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        #chat-container { 
+            border: 1px solid #ddd; 
+            height: 400px; 
+            overflow-y: scroll; 
+            padding: 10px; 
+            margin-bottom: 20px; 
+        }
+        #user-input { 
+            width: 70%; 
+            padding: 10px; 
+        }
+        button { 
+            padding: 10px 20px; 
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+        }
+        .bot-message {
+            background-color: #f5f5f5;
+        }
+        .urgent {
+            background-color: #ffebee;
+            border-left: 5px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trimate Medical Chatbot</h1>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Type your message here...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const chatContainer = document.getElementById('chat-container');
+            const userMessage = input.value;
+            
+            if (!userMessage.trim()) return;
+
+            // Add user message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user-message';
+            userDiv.innerHTML = `<strong>You:</strong> ${userMessage}`;
+            chatContainer.appendChild(userDiv);
+            
+            input.value = '';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: userMessage }),
+                });
+                
+                const data = await response.json();
+                
+                // Add bot message
+                const botDiv = document.createElement('div');
+                botDiv.className = 'message bot-message';
+                if (data.response.includes('URGENT:')) {
+                    botDiv.className += ' urgent';
+                }
+                botDiv.innerHTML = `<strong>Bot:</strong> ${data.response}`;
+                chatContainer.appendChild(botDiv);
+            } catch (error) {
+                console.error('Error:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message bot-message';
+                errorDiv.innerHTML = `<strong>Error:</strong> Failed to get response`;
+                chatContainer.appendChild(errorDiv);
+            }
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Allow sending message with Enter key
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
