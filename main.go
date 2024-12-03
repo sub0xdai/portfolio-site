@@ -1,21 +1,20 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
+	"github.com/sashabaranov/go-openai"
+	"github.com/sub0x/resume-ai/internal/api"
+	"github.com/sub0x/resume-ai/internal/types"
 )
 
 type ChatRequest struct {
-	Text           string   `json:"text"`
-	ResumeSection  []string `json:"resume_sections"`
+	Text          string   `json:"text"`
+	ResumeSection []string `json:"resume_sections"`
 }
 
 type ChatResponse struct {
@@ -71,7 +70,7 @@ const indexHTML = `<!DOCTYPE html>
 <html>
 <head>
     <title>Daniel Palazzolo | Portfolio</title>
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA/4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREQAAAAAAEAAAEAAAAAEAAAABAAAAEAAAAAAQAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAEAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD8HwAA++8AAPf3AAD3+wAA9/sAAPf7AAD3+wAA9/sAAP//AAD//wAA//8AAP//AAD//wAA" />
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA/4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREQAAAAAAEAAAEAAAAAEAAAABAAAAEAAAAAAQAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAEAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD8HwAA++8AAPf3AAD3+wAA9/sAAPf7AAD3+wAA9/sAAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -560,83 +559,59 @@ const indexHTML = `<!DOCTYPE html>
         });
     </script>
 </body>
-</html>`
+</html>
+`
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found")
+		log.Fatal("Error loading .env file")
 	}
 
-	openAIKey := os.Getenv("OPENAI_API_KEY")
-	if openAIKey == "" {
-		log.Fatal("OPENAI_API_KEY environment variable not set")
-	}
-
-	app := fiber.New(fiber.Config{
-		AppName: "Personal AI Resume",
-	})
-
+	app := fiber.New()
 	app.Use(cors.New())
 
-	// Serve static files
-	app.Static("/static", "./static")
+	// Initialize OpenAI client
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
-	// Serve the HTML page at root
-	app.Get("/", func(c *fiber.Ctx) error {
-		c.Set("Content-Type", "text/html")
-		return c.SendString(indexHTML)
+	// Initialize config
+	config := &types.Config{
+		ResumePath: "resume.md",
+		KnowledgeBasePath: "knowledge/",
+		CurrentRole: "Software Engineer",
+		ExperienceYears: "5+",
+		KeySkills: []string{"Go", "Python", "JavaScript", "System Design", "AI/ML"},
+	}
+
+	// Initialize API server
+	server := api.NewServer(config, client)
+
+	// Setup routes
+	app.Static("/", "./static")
+	app.Post("/api/chat", func(c *fiber.Ctx) error {
+		var req ChatRequest
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(400).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+
+		// Add resume sections as context
+		req.ResumeSection = resumeSections
+
+		// Use the API server to handle chat
+		response, err := server.HandleChat(req.Text, req.ResumeSection)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(ChatResponse{Response: response})
 	})
-
-	api := app.Group("/api")
-	api.Post("/chat", handleChat)
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "3002"
 	}
 	log.Fatal(app.Listen(":" + port))
-}
-
-func handleChat(c *fiber.Ctx) error {
-	var req ChatRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
-	// Add resume sections as context
-	req.ResumeSection = resumeSections
-
-	// Forward request to Python service
-	jsonData, err := json.Marshal(req)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to process request",
-		})
-	}
-
-	resp, err := http.Post("http://localhost:8000/chat", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to reach chat service",
-		})
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to read response",
-		})
-	}
-
-	var chatResp ChatResponse
-	if err := json.Unmarshal(body, &chatResp); err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to parse response",
-		})
-	}
-
-	return c.JSON(chatResp)
 }

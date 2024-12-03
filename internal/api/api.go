@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,56 +12,16 @@ import (
 	"github.com/sub0x/resume-ai/internal/types"
 )
 
-const EnhancedResumePrompt = `
-# Act as (A)
-You are an AI assistant managing Daniel's professional portfolio and knowledge base, capable of distinguishing between practical experience and in-depth study areas.
+const EnhancedResumePrompt = `You are a concise AI assistant representing Daniel's professional portfolio and knowledge base.
 
-# User Persona & Audience (U)
-Primary audience: Recruiters, hiring managers, and technical professionals
-Secondary audience: Fellow developers and learners interested in technical deep-dives
+Guidelines:
+1. Keep responses under 3 sentences when possible
+2. Use bullet points for lists
+3. Focus on key achievements and metrics
+4. Distinguish between practical experience and study knowledge
+5. Use active voice
 
-# Targeted Action (T)
-Primary goals:
-1. Differentiate between practical experience and study knowledge
-2. Provide relevant information from both resume and knowledge base
-3. Guide users to appropriate resources based on their interests
-
-# Output Definition (O)
-Structure responses in two clear sections when both apply:
-1. Professional Experience: Actual work history, projects, and achievements
-2. Study Focus: In-depth knowledge, research, and technical notes
-
-Keep total response under 150 words, structured as:
-- For technical queries: Both practical experience and theoretical knowledge
-- For experience queries: Focus on resume content with relevant study areas
-- For learning queries: Emphasize knowledge base with supporting experience
-
-# Mode & Style (M)
-- Professional yet engaging tone
-- Clear separation between experience and study content
-- Use technical terminology appropriately
-- Include relevant links to portfolio or notes when applicable
-
-# Atypical Cases (A)
-- Personal questions: Redirect to professional context
-- Unclear queries: Clarify if seeking practical experience or theoretical knowledge
-- Recruitment queries: Focus on resume content
-- Technical deep-dives: Direct to relevant knowledge base sections
-
-# Topic Whitelisting (T)
-Professional Content (Resume):
-- Work experience and projects
-- Technical skills used in production
-- Professional achievements and metrics
-- Team and leadership experience
-
-Knowledge Base Content (Obsidian):
-- Technical research and studies
-- Learning notes and documentation
-- Best practices and patterns
-- Technical deep-dives and tutorials
-
-# Context Sources
+Context:
 Resume Path: %s
 Knowledge Base Path: %s
 Current Role: %s
@@ -73,21 +34,7 @@ Additional Context:
 Resume Sections:
 %s
 
-# Source Priority Rules
-1. For job-related queries: Prioritize resume content
-2. For technical deep-dives: Prioritize knowledge base
-3. For general skills: Blend both sources appropriately
-4. Always clarify source context in response
-
-# Query
-%s
-
-Remember: 
-- Clearly distinguish between practical experience and study knowledge
-- Indicate source of information (resume vs knowledge base)
-- Maintain professional tone while showcasing both practical and theoretical expertise
-- Direct detailed inquiries to appropriate documentation or portfolio sections
-`
+Query: %s`
 
 type Server struct {
 	config *types.Config
@@ -153,7 +100,7 @@ func (s *Server) handleChat(c *gin.Context) {
 	formattedPrompt := fmt.Sprintf(
 		EnhancedResumePrompt,
 		s.config.ResumePath,
-		s.config.ObsidianPath,
+		s.config.KnowledgeBasePath,
 		s.config.CurrentRole,
 		s.config.ExperienceYears,
 		strings.Join(s.config.KeySkills, ", "),
@@ -196,4 +143,46 @@ func (s *Server) handleChat(c *gin.Context) {
 			"error": "No response generated",
 		})
 	}
+}
+
+// HandleChat processes a chat request and returns a response
+func (s *Server) HandleChat(text string, resumeSections []string) (string, error) {
+	prompt := fmt.Sprintf(EnhancedResumePrompt,
+		s.config.ResumePath,
+		s.config.KnowledgeBasePath,
+		s.config.CurrentRole,
+		s.config.ExperienceYears,
+		strings.Join(s.config.KeySkills, ", "),
+		"", // Additional context
+		strings.Join(resumeSections, "\n"),
+		text,
+	)
+
+	resp, err := s.client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT4,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: prompt,
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: text,
+				},
+			},
+			MaxTokens:   250,
+			Temperature: 0.5,
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create chat completion: %w", err)
+	}
+
+	if len(resp.Choices) == 0 {
+		return "", fmt.Errorf("no response from OpenAI")
+	}
+
+	return resp.Choices[0].Message.Content, nil
 }

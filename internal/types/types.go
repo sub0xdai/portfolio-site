@@ -20,9 +20,9 @@ type ScoredChunk struct {
 
 // Config represents the application configuration
 type Config struct {
-	ResumePath      string
-	ObsidianPath    string
-	CurrentRole     string
-	ExperienceYears string
-	KeySkills       []string
+	ResumePath        string   `json:"resume_path"`
+	KnowledgeBasePath string   `json:"knowledge_base_path"`
+	CurrentRole       string   `json:"current_role"`
+	ExperienceYears   string   `json:"experience_years"`
+	KeySkills         []string `json:"key_skills"`
 }
