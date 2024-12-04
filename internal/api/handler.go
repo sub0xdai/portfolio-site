@@ -3,16 +3,13 @@ package api
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/sub0x/resume-ai/internal/knowledge"
 	"github.com/sub0x/resume-ai/internal/types"
 )
 
-type Handler struct {
-	service *knowledge.Service
-}
+type Handler struct {}
 
-func NewHandler(service *knowledge.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(_ interface{}) *Handler {
+	return &Handler{}
 }
 
 type QueryRequest struct {
@@ -20,7 +17,7 @@ type QueryRequest struct {
 }
 
 type QueryResponse struct {
-	Chunks []types.Chunk `json:"chunks"`
+	Answer string `json:"answer"`
 }
 
 func (h *Handler) HandleQuery(c *fiber.Ctx) error {
@@ -31,33 +28,20 @@ func (h *Handler) HandleQuery(c *fiber.Ctx) error {
 		})
 	}
 
-	chunks, err := h.service.Query(req.Query, 5)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": fmt.Sprintf("Failed to query: %v", err),
-		})
-	}
-
-	return c.JSON(QueryResponse{Chunks: chunks})
+	// Return a simple response without knowledge base integration
+	return c.JSON(QueryResponse{
+		Answer: fmt.Sprintf("You asked: %s. This is a simplified response without knowledge base integration.", req.Query),
+	})
 }
 
 func (h *Handler) HandleGetTags(c *fiber.Ctx) error {
-	tags := h.service.GetAllTags()
 	return c.JSON(fiber.Map{
-		"tags": tags,
+		"tags": []string{},
 	})
 }
 
 func (h *Handler) HandleGetNotesByTag(c *fiber.Ctx) error {
-	tag := c.Params("tag")
-	if tag == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Tag parameter is required",
-		})
-	}
-
-	notes := h.service.GetNotesByTag(tag)
 	return c.JSON(fiber.Map{
-		"notes": notes,
+		"notes": []types.Note{},
 	})
 }

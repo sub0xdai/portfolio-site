@@ -121,3 +121,28 @@
 - Consider adding animations for smoother transitions
 - Explore additional interactive elements
 - Test accessibility across different devices
+
+## 12.04
+### Goals
+- Add responsive design for mobile and tablet devices
+- Optimize performance
+- Make the project cards nicer
+- Ai chatbox should be a popout screen which replicates a terminal
+
+## Development Summary - 12.04
+
+### Changes Made
+- Implemented and refined the `ProjectCarousel` class in `carousel.js` for enhanced carousel functionality.
+- Added navigation buttons and ensured only one project card is displayed at a time.
+- Attempted to integrate `carousel.js` with the HTML, identifying issues with script loading.
+
+### Issues Encountered
+- Source map error due to missing `.map` file, not affecting functionality.
+- `ProjectCarousel` not defined error due to script loading issues.
+
+### Next Steps
+- Verify server configuration to ensure static files are served correctly.
+- Consider leveraging HTMX more effectively for carousel functionality.
+
+### Notes
+- Current stack includes Go, HTMX, and Tailwind CSS, with JavaScript primarily for the carousel.

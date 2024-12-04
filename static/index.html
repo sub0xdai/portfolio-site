@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Daniel Palazzolo | Portfolio</title>
+    <title> sub0x | Portfolio</title>
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA/4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREQAAAAAAEAAAEAAAAAEAAAABAAAAEAAAAAAQAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAEAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD8HwAA++8AAPf3AAD3+wAA9/sAAPf7AAD3+wAA9/sAAP//AAD//wAA//8AAP//AAD//wAA" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -341,18 +341,27 @@
             gap: 2rem;
             transition: transform 0.5s ease;
             padding: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .project-card {
-            flex: 0 0 calc(25% - 1.5rem);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            transform: scale(0.95);
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            transform: translateY(0);
-            transition: all 0.3s ease;
             min-width: 300px;
+        }
+
+        .project-card.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
         }
 
         .project-card:hover {
@@ -448,6 +457,13 @@
             flex-direction: column;
             position: relative;
         }
+
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: auto; /* Adjust based on content */
+        }
     </style>
 </head>
 <body>
@@ -480,55 +496,57 @@
         <section id="projects" class="projects-section">
             <h2 class="section-title">Featured Projects</h2>
             <div class="projects-container">
-                <div class="project-cards" id="projectCards">
-                    <div class="project-card">
-                        <img src="https://picsum.photos/400/300?crypto" alt="n0xtilus Project">
-                        <h3>n0xtilus</h3>
-                        <p>CLI tool for automated perpetual swaps trading with risk management. Simplifies position sizing and trade execution.</p>
-                        <div class="tags">
-                            <span class="tag">Go</span>
-                            <span class="tag">Trading</span>
-                            <span class="tag">CLI</span>
-                            <span class="tag">Risk Management</span>
+                <div class="carousel-container">
+                    <div class="project-cards" id="projectCards">
+                        <div class="project-card active">
+                            <img src="https://picsum.photos/400/300?crypto" alt="n0xtilus Project">
+                            <h3>n0xtilus</h3>
+                            <p>CLI tool for automated perpetual swaps trading with risk management. Simplifies position sizing and trade execution.</p>
+                            <div class="tags">
+                                <span class="tag">Go</span>
+                                <span class="tag">Trading</span>
+                                <span class="tag">CLI</span>
+                                <span class="tag">Risk Management</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="project-card">
-                        <img src="https://picsum.photos/400/301?research" alt="CSIRO Portal">
-                        <h3>CSIRO Research Portal</h3>
-                        <p>Web application for managing ML/Data Science research applications, focusing on COVID-19 vaccination research in Australia.</p>
-                        <div class="tags">
-                            <span class="tag">ASP.NET Core</span>
-                            <span class="tag">PostgreSQL</span>
-                            <span class="tag">Bootstrap</span>
-                            <span class="tag">jQuery</span>
+                        <div class="project-card">
+                            <img src="https://picsum.photos/400/301?research" alt="CSIRO Portal">
+                            <h3>CSIRO Research Portal</h3>
+                            <p>Web application for managing ML/Data Science research applications, focusing on COVID-19 vaccination research in Australia.</p>
+                            <div class="tags">
+                                <span class="tag">ASP.NET Core</span>
+                                <span class="tag">PostgreSQL</span>
+                                <span class="tag">Bootstrap</span>
+                                <span class="tag">jQuery</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="project-card">
-                        <img src="https://picsum.photos/400/302?garage" alt="Bob's Garage">
-                        <h3>Bob's Garage</h3>
-                        <p>Full-stack web application for a mechanics workshop with service management, blog functionality, and customer feedback system.</p>
-                        <div class="tags">
-                            <span class="tag">React</span>
-                            <span class="tag">Node.js</span>
-                            <span class="tag">Tailwind</span>
-                            <span class="tag">SQLite</span>
+                        <div class="project-card">
+                            <img src="https://picsum.photos/400/302?garage" alt="Bob's Garage">
+                            <h3>Bob's Garage</h3>
+                            <p>Full-stack web application for a mechanics workshop with service management, blog functionality, and customer feedback system.</p>
+                            <div class="tags">
+                                <span class="tag">React</span>
+                                <span class="tag">Node.js</span>
+                                <span class="tag">Tailwind</span>
+                                <span class="tag">SQLite</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="project-card">
-                        <img src="https://picsum.photos/400/303?kubernetes" alt="Kubernetes Toolkit">
-                        <h3>Kubernetes Toolkit</h3>
-                        <p>Upcoming project: A comprehensive toolkit for Kubernetes cluster management and deployment automation.</p>
-                        <div class="tags">
-                            <span class="tag">Kubernetes</span>
-                            <span class="tag">Go</span>
-                            <span class="tag">DevOps</span>
-                            <span class="tag">Cloud Native</span>
+                        <div class="project-card">
+                            <img src="https://picsum.photos/400/303?kubernetes" alt="Kubernetes Toolkit">
+                            <h3>Kubernetes Toolkit</h3>
+                            <p>Upcoming project: A comprehensive toolkit for Kubernetes cluster management and deployment automation.</p>
+                            <div class="tags">
+                                <span class="tag">Kubernetes</span>
+                                <span class="tag">Go</span>
+                                <span class="tag">DevOps</span>
+                                <span class="tag">Cloud Native</span>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="slider-controls">
-                    <button class="slider-btn" onclick="slideProjects(-1)">←</button>
-                    <button class="slider-btn" onclick="slideProjects(1)">→</button>
+                    <button class="slider-btn prev" data-index="prev">&lt;</button>
+                    <button class="slider-btn next" data-index="next">&gt;</button>
                 </div>
                 <div class="slider-dots" id="sliderDots"></div>
             </div>
@@ -545,6 +563,12 @@
             <button class="send-btn" onclick="sendMessage()">Send</button>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const carousel = new ProjectCarousel('.carousel-container');
+        });
+    </script>
 
     <script>
         let chatActive = false;
@@ -644,5 +668,7 @@
             }
         }
     </script>
+
+    <script src="/static/js/carousel.js"></script>
 </body>
 </html>
